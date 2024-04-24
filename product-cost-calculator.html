@@ -104,7 +104,7 @@
                         const raw_data = XLSX.utils.sheet_to_json(first_sheet, {header: 1});
 
                         setRawData(raw_data);
-                        // console.log('raw_json_data', raw_data);
+                        console.log('raw_json_data', raw_data);
 
                         // 將產品資料快取在瀏覽器內，以便下次使用
                         localStorage.setItem('productData', JSON.stringify(raw_data));
@@ -121,7 +121,7 @@
                         // console.log(evt.target.result);
 
                         const workbook = XLSX.read(evt.target.result);
-                        // console.log(workbook);
+                        console.log(workbook);
 
                         setXlsxData(workbook);
 
@@ -206,7 +206,7 @@
                                                 <Form>
                                                     <Form.Group className="mb-3" controlId="formBasicEmail">
                                                         <Form.Label>產品名稱</Form.Label>
-                                                        <Form.Control type="text" placeholder="產品名稱" onChange={handleQuery} />
+                                                        <Form.Control type="text" placeholder="產品名稱" onChange={(e)=>{handleQuery(e)}} />
                                                         <Form.Text className="text-muted">
                                                             請輸入要查詢的產品名稱
                                                         </Form.Text>
