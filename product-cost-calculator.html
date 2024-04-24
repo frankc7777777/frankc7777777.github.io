@@ -218,7 +218,7 @@
                                                     :
                                                         <>
                                                             <ListGroup onClick={toggleListExpand}>
-                                                                <ListGroup.Item ref={currentCandicatorRef} style={{ fontWeight: 'bold', backgroundColor: 'rgb(191 231 191)' }}>{currentCandicatorText}</ListGroup.Item>
+                                                                <ListGroup.Item ref={currentCandicatorRef} style={{ fontWeight: 'bold', backgroundColor: 'rgb(191 231 191)' }}>{currentCandicatorText} {expandCandicator==false?'   (點選我可選擇其他名稱相似產品)':''}</ListGroup.Item>
                                                             </ListGroup>
                                                             <ListGroup className={expandCandicator?'candicatorList expand d-block':'candicatorList d-none'}>
                                                                 {
@@ -238,43 +238,46 @@
                             expandCurrentCost == false?
                                 <></>
                             :
-                            <Container fluid>
-                                <Row>
-                                    <Col>
-                                        <Table striped bordered hover>
-                                            <thead>
-                                                <tr>
-                                                    <th>建議最低售價</th>
-                                                    <th>成本</th>
-                                                    <th>毛利</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{currentPrice}(目前ERP)</td>
-                                                    <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{currentCost}</td>
-                                                    <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{ Number.parseFloat(((currentPrice - currentCost) / currentPrice) * 100).toFixed(2) }%</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>{ Number.parseFloat((currentCost)* 1.25).toFixed(2) }</td>
-                                                    <td>{currentCost}</td>
-                                                    <td>25%</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>{ Number.parseFloat((currentCost)* 1.30).toFixed(2) }</td>
-                                                    <td>{currentCost}</td>
-                                                    <td>30%</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>{ Number.parseFloat((currentCost)* 1.50).toFixed(2) }</td>
-                                                    <td>{currentCost}</td>
-                                                    <td>50%</td>
-                                                </tr>
-                                            </tbody>
-                                        </Table>
-                                    </Col>
-                                </Row>
-                            </Container>
+                                <>
+                                    <Container fluid>
+                                        <Row className='mt-3'><Col><h5>試算結果</h5></Col></Row>
+                                        <Row>
+                                            <Col>
+                                                <Table striped bordered hover>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>建議最低售價</th>
+                                                            <th>成本</th>
+                                                            <th>毛利</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{currentPrice}(目前ERP)</td>
+                                                            <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{currentCost}</td>
+                                                            <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{ Number.parseFloat(((currentPrice - currentCost) / currentPrice) * 100).toFixed(2) }%</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{ Number.parseFloat((currentCost)* 1.25).toFixed(2) }</td>
+                                                            <td>{currentCost}</td>
+                                                            <td>25%</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{ Number.parseFloat((currentCost)* 1.30).toFixed(2) }</td>
+                                                            <td>{currentCost}</td>
+                                                            <td>30%</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{ Number.parseFloat((currentCost)* 1.50).toFixed(2) }</td>
+                                                            <td>{currentCost}</td>
+                                                            <td>50%</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </Table>
+                                            </Col>
+                                        </Row>
+                                    </Container>
+                                </>
                         }
                     </>
                     ;
