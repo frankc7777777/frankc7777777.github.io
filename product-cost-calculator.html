@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xlsx Helper</title>
+    <link rel="stylesheet" href="./style.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous"
+    />
+    <style>
+
+        .candicatorList {
+            overflow: hidden;
+            height: 3rem;
+        }
+        .candicatorList.expand {
+            height: 10rem;
+            overflow-y: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <!-- This element's contents will be replaced with your component. -->
+    </div>
+
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js" integrity="sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
+
+    <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+    <script type="text/babel">
+
+        // 在 babel 下，因為是在瀏覽器環境，所以不需要另外再做 import 
+        // https://stackoverflow.com/a/73963030
+
+        // import React, { Component } from 'react';
+        // import ReactDOM from 'react-dom';
+        // import { createRoot } from 'react-dom/client';
+        // import * as XLSX from 'xlsx';
+        // import * from 'xlsx';
+        const Button = ReactBootstrap.Button;
+        const Container = ReactBootstrap.Container;
+        const Row = ReactBootstrap.Row;
+        const Col = ReactBootstrap.Col;
+        const Form = ReactBootstrap.Form;
+        const ListGroup = ReactBootstrap.ListGroup;
+        const Table = ReactBootstrap.Table;
+
+        // 產生作品清單
+        try{
+            
+            function App() {
+
+                const [xlsxData, setXlsxData] = React.useState(null);  // 剛從 xlsx 轉出來的 sheetjs 物件
+                const [rawData, setRawData] = React.useState(null);    // 從 sheetjs 的物件，解析完成的所有資料(JSON).
+                const [isReady, setIsReady] = React.useState(false);   // 檔案是否上傳完成？
+                const [candicatorList, setCandicatorList] = React.useState(null);    // 符合查詢內容的項目清單
+                const [showCandicator, setShowCandicator] = React.useState(false);    // 是否顯示符合查詢內容的項目？
+                const [expandCandicator, setExpandCandicator] = React.useState(false);   // 是否展開查詢結果清單？
+                const [currentCandicatorText, setCurrentCandicatorText] = React.useState('請選擇你想查詢的項目');   // 顯示目前正在查詢的項目
+
+                const [expandCurrentCost, setExpandCurrentCost] = React.useState(false);   // 是否顯示成本試算結果？
+                const [currentPrice, setCurrentPrice] = React.useState(0);   // 目前ERP中設定的售價
+                const [currentCost, setCurrentCost] = React.useState(0);   // 目前正在試算的成本金額
+
+                const currentCandicatorRef = React.useRef();
+
+                // 詢問是否載入先前快取的資料？
+                React.useEffect(()=>{
+
+                    // 如果快取有先前上傳的資料，詢問是否使用？
+                    if(localStorage.getItem('productData'))
+                    {
+                        if(confirm('瀏覽器內有儲存先前上傳的列表資料，是否使用？'))
+                        {
+                            setXlsxData(JSON.parse(localStorage.getItem('xlsxData')));
+                        }
+                    }
+
+                }, []);
+
+                React.useEffect(()=>{
+                    console.log('xlsxData',xlsxData);
+
+                    if(xlsxData)
+                    {
+                        setIsReady(true);
+
+                        let first_sheet = xlsxData.Sheets[xlsxData.SheetNames[0]];
+                        const raw_data = XLSX.utils.sheet_to_json(first_sheet, {header: 1});
+
+                        setRawData(raw_data);
+                        // console.log('raw_json_data', raw_data);
+
+                        // 將產品資料快取在瀏覽器內，以便下次使用
+                        localStorage.setItem('productData', JSON.stringify(raw_data));
+                    }
+
+                }, [xlsxData]);
+
+                // 處理資料來源上傳
+                const handleFileUpload = (e)=>{
+                    console.log(e.currentTarget.files);
+
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        // console.log(evt.target.result);
+
+                        const workbook = XLSX.read(evt.target.result);
+                        // console.log(workbook);
+
+                        setXlsxData(workbook);
+
+                        // 將產品資料快取在瀏覽器內，以便下次使用
+                        localStorage.setItem('xlsxData', JSON.stringify(workbook));
+                    };
+                    reader.readAsArrayBuffer(e.currentTarget.files[0]);
+
+                    // const wb = XLSX.utils.book_new();
+                    // const ws = XLSX.utils.aoa_to_sheet([["a", "b", "c"], [1, 2, 3]]);
+                    // XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                    // XLSX.writeFile(wb, "SheetJSESMTest.xlsx");
+                }
+
+                // 處理使用者端輸入字串
+                const handleQuery = (e)=>{
+                    // console.log(e.currentTarget.value);
+                    let _qs = e.currentTarget.value;
+
+                    if(_qs && _qs != '')
+                    {
+                        // 過濾使用者輸入的關鍵字，決定是否加入候選列表？
+                        let filtered_data = rawData.filter(r=>{
+                            // console.log(r);
+                            if(r[0].indexOf(_qs) != -1)
+                            {
+                                return true;
+                            }else if(r[1].indexOf(_qs) != -1){
+                                return true;
+                            }else if(r[2].indexOf(_qs) != -1){
+                                return true;
+                            }else if(r[3].indexOf(_qs) != -1){
+                                return true;
+                            }else{
+                                return false;
+                            }
+                        });
+                        setCandicatorList(filtered_data);
+
+                        setShowCandicator(true);
+
+                        toggleListExpand();
+                    }
+                }
+
+                const toggleListExpand = ()=>{
+                    setExpandCandicator(!expandCandicator);
+                    setExpandCurrentCost(false);
+                }
+
+                // 進行產品試算
+                const doCalculate = (c)=>{
+                    console.log(c[8]);
+
+                    // 顯示目前正在顯示的產品項目
+                    setCurrentCandicatorText(`${c[0]} - ${c[1]} - ${c[2]} - ${c[3]}`);
+
+                    // 收合選單
+                    setExpandCandicator(false);
+
+                    // 設定目前ERP中的售價
+                    setCurrentPrice(c[5]);
+                    // 設定要試算的成本
+                    setCurrentCost(c[8]);
+                    setExpandCurrentCost(true);
+                }
+
+                return <>
+                        <Container fluid>
+                            <Row>
+                                <Col>
+                                    {
+                                        isReady == false ?
+                                            <Form.Group controlId="formFile" className="mb-3">
+                                                <Form.Label>請上傳ERP匯出的資料來源檔案(.xlsx)</Form.Label>
+                                                <Form.Control type="file" onChange={handleFileUpload} />
+                                            </Form.Group>
+                                        :
+                                            <>
+                                                <Form>
+                                                    <Form.Group className="mb-3" controlId="formBasicEmail">
+                                                        <Form.Label>產品名稱</Form.Label>
+                                                        <Form.Control type="text" placeholder="產品名稱" onChange={handleQuery} />
+                                                        <Form.Text className="text-muted">
+                                                            請輸入要查詢的產品名稱
+                                                        </Form.Text>
+                                                    </Form.Group>
+                                                </Form>
+                                                {
+                                                    showCandicator == false ? 
+                                                        <></>
+                                                    :
+                                                        <>
+                                                            <ListGroup onClick={toggleListExpand}>
+                                                                <ListGroup.Item ref={currentCandicatorRef} style={{ fontWeight: 'bold', backgroundColor: 'rgb(191 231 191)' }}>{currentCandicatorText}</ListGroup.Item>
+                                                            </ListGroup>
+                                                            <ListGroup className={expandCandicator?'candicatorList expand d-block':'candicatorList d-none'}>
+                                                                {
+                                                                    candicatorList.map((c, idx)=>{
+                                                                        return <ListGroup.Item key={idx} onClick={(e)=>{ doCalculate(c) }}>{`${c[0]} - ${c[1]} - ${c[2]} - ${c[3]}`}</ListGroup.Item>
+                                                                    })
+                                                                }
+                                                            </ListGroup>
+                                                        </>
+                                                }
+                                            </>
+                                    }
+                                </Col>
+                            </Row>
+                        </Container>
+                        {
+                            expandCurrentCost == false?
+                                <></>
+                            :
+                            <Container fluid>
+                                <Row>
+                                    <Col>
+                                        <Table striped bordered hover>
+                                            <thead>
+                                                <tr>
+                                                    <th>建議最低售價</th>
+                                                    <th>成本</th>
+                                                    <th>毛利</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{currentPrice}(目前ERP)</td>
+                                                    <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{currentCost}</td>
+                                                    <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{ Number.parseFloat(((currentPrice - currentCost) / currentPrice) * 100).toFixed(2) }%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{ Number.parseFloat((currentCost)* 1.25).toFixed(2) }</td>
+                                                    <td>{currentCost}</td>
+                                                    <td>25%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{ Number.parseFloat((currentCost)* 1.30).toFixed(2) }</td>
+                                                    <td>{currentCost}</td>
+                                                    <td>30%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{ Number.parseFloat((currentCost)* 1.50).toFixed(2) }</td>
+                                                    <td>{currentCost}</td>
+                                                    <td>50%</td>
+                                                </tr>
+                                            </tbody>
+                                        </Table>
+                                    </Col>
+                                </Row>
+                            </Container>
+                        }
+                    </>
+                    ;
+            }
+
+            // const domNode = document.getElementById('container');
+            // const root = createRoot(domNode);
+            // root.render(<App />);
+            ReactDOM.render(
+                <App />,
+                document.getElementById('container')
+            );
+
+        }catch(err){
+            console.log(err);
+        }
+    </script>
+
+</body>
+
+</html>
