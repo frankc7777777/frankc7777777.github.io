@@ -165,7 +165,8 @@
 
                         setShowCandicator(true);
 
-                        toggleListExpand();
+                        setExpandCandicator(true);
+                        setExpandCurrentCost(false);
                     }
                 }
 
@@ -258,17 +259,22 @@
                                                             <td style={{ backgroundColor: 'rgb(249 196 196)' }}>{ Number.parseFloat(((currentPrice - currentCost) / currentPrice) * 100).toFixed(2) }%</td>
                                                         </tr>
                                                         <tr>
-                                                            <td>{ Number.parseFloat((currentCost)* 1.25).toFixed(2) }</td>
+                                                            <td>{ Number.parseFloat((currentCost) / (1 - 0.25)).toFixed(2) }</td>
                                                             <td>{currentCost}</td>
                                                             <td>25%</td>
                                                         </tr>
                                                         <tr>
-                                                            <td>{ Number.parseFloat((currentCost)* 1.30).toFixed(2) }</td>
+                                                            <td>{ Number.parseFloat((currentCost) / (1 - 0.30)).toFixed(2) }</td>
                                                             <td>{currentCost}</td>
                                                             <td>30%</td>
                                                         </tr>
                                                         <tr>
-                                                            <td>{ Number.parseFloat((currentCost)* 1.50).toFixed(2) }</td>
+                                                            <td>{ Number.parseFloat((currentCost) / (1 - 0.40)).toFixed(2) }</td>
+                                                            <td>{currentCost}</td>
+                                                            <td>40%</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{ Number.parseFloat((currentCost) / (1 - 0.5)).toFixed(2) }</td>
                                                             <td>{currentCost}</td>
                                                             <td>50%</td>
                                                         </tr>
