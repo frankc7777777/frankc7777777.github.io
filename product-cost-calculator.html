@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>產品成本試算小幫手 v1.1</title>
+    <title>產品成本試算小幫手 v1.2</title>
     <link rel="stylesheet" href="./style.css">
     <link
         rel="stylesheet"
@@ -47,6 +47,7 @@
 
         // v1.1 修正若 excel 檔過大，將無法存到 localStorage 的問題
         //      加上可下多重關鍵字的查詢 (用空白隔開)
+        // v1.2 修正關鍵字搜尋有時會搜出不符合關鍵字組的結果
 
         // 在 babel 下，因為是在瀏覽器環境，所以不需要另外再做 import 
         // https://stackoverflow.com/a/73963030
@@ -159,6 +160,7 @@
                         // 過濾使用者輸入的關鍵字，決定是否加入候選列表？
                         let filtered_data = rawData.filter(r=>{
                             // console.log(r);
+                            let _result = [];
                             // console.log('_qs',_qs.charCodeAt(0).toString(16));  // 將中文字轉成 \uxxxx 的格式
 
                             // 將想要查詢的中文字串轉成 \uxxxx 的格式
@@ -168,18 +170,28 @@
                                 }else{ return '|'; }
                             });
 
+                            // console.log(search_pattern_arr_unicide.join(''));
+
                             // 計算關鍵詞的數目
                             let total_keyword_num = search_pattern_arr_unicide.join('').split('|').length;
 
-                            // 進行比對
-                            let search_result = Array.from(`${r[0]} - ${r[1]} - ${r[2]} - ${r[3]}`.matchAll(new RegExp(search_pattern_arr_unicide.join(''), 'g')));
+                            Array.from(search_pattern_arr_unicide.join('').split('|')).forEach((_q, _idx)=>{
+
+                                // 進行比對
+                                let __search_result = `${r[0]} - ${r[1]} - ${r[2]} - ${r[3]}`.match(new RegExp(_q, 'g')) || [];
+                                if(__search_result.length >= 1) {
+                                    _result[_idx] = 1;
+                                }else{
+                                    _result[_idx] = 0;
+                                }
+                            });
 
                             // if(search_result.length >= total_keyword_num) {
                             //     console.log('search_result', search_result);
                             // }
 
-                            // 如果比對的結果，大於關鍵詞的數量，則為我們要的項目
-                            return search_result.length >= total_keyword_num;
+                            // 如果每個關鍵字詞都有搜尋到才給過
+                            return _result.every(v=>v==1);
                         });
 
                         setCandicatorList(filtered_data);
@@ -262,7 +274,8 @@
                             :
                                 <>
                                     <Container fluid>
-                                        <Row className='mt-3'><Col><h5>試算結果</h5></Col></Row>
+                                        <Row className='mt-3'><Col><h5>{currentCandicatorText}</h5></Col></Row>
+                                        <Row><Col><h6>試算結果</h6></Col></Row>
                                         <Row>
                                             <Col>
                                                 <Table striped bordered hover>
