@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xlsx Helper</title>
+    <title>產品成本試算小幫手 v1.1</title>
     <link rel="stylesheet" href="./style.css">
     <link
         rel="stylesheet"
@@ -19,7 +19,7 @@
             height: 3rem;
         }
         .candicatorList.expand {
-            height: 10rem;
+            height: 20rem;
             overflow-y: auto;
         }
 
@@ -27,6 +27,7 @@
 </head>
 
 <body>
+    
     <div id="container">
         <!-- This element's contents will be replaced with your component. -->
     </div>
@@ -43,6 +44,9 @@
     <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <script type="text/babel">
+
+        // v1.1 修正若 excel 檔過大，將無法存到 localStorage 的問題
+        //      加上可下多重關鍵字的查詢 (用空白隔開)
 
         // 在 babel 下，因為是在瀏覽器環境，所以不需要另外再做 import 
         // https://stackoverflow.com/a/73963030
@@ -82,17 +86,23 @@
                 // 詢問是否載入先前快取的資料？
                 React.useEffect(()=>{
 
+                    // 為了節省 localStorage 的空間，所以決定不存 parse 過的 JSON 資料
+                    localStorage.removeItem('xlsxData');
+
                     // 如果快取有先前上傳的資料，詢問是否使用？
                     if(localStorage.getItem('productData'))
                     {
                         if(confirm('瀏覽器內有儲存先前上傳的列表資料，是否使用？'))
                         {
-                            setXlsxData(JSON.parse(localStorage.getItem('xlsxData')));
+                            setRawData(JSON.parse(localStorage.getItem('productData')));
+
+                            setIsReady(true);
                         }
                     }
 
                 }, []);
 
+                // 解析上傳上來的excel檔裡的資料
                 React.useEffect(()=>{
                     console.log('xlsxData',xlsxData);
 
@@ -125,8 +135,9 @@
 
                         setXlsxData(workbook);
 
+                        // 為了節省 localStorage 的空間，所以決定不存此資料…
                         // 將產品資料快取在瀏覽器內，以便下次使用
-                        localStorage.setItem('xlsxData', JSON.stringify(workbook));
+                        // localStorage.setItem('xlsxData', JSON.stringify(workbook));
                     };
                     reader.readAsArrayBuffer(e.currentTarget.files[0]);
 
@@ -138,7 +149,7 @@
 
                 // 處理使用者端輸入字串
                 const handleQuery = (e)=>{
-                    // console.log(e.currentTarget.value);
+                    console.log(e.currentTarget.value);
                     let _qs = e.currentTarget.value;
 
                     setCurrentCandicatorText('請選擇你想查詢的項目');
@@ -148,19 +159,29 @@
                         // 過濾使用者輸入的關鍵字，決定是否加入候選列表？
                         let filtered_data = rawData.filter(r=>{
                             // console.log(r);
-                            if(r[0].indexOf(_qs) != -1)
-                            {
-                                return true;
-                            }else if(r[1].indexOf(_qs) != -1){
-                                return true;
-                            }else if(r[2].indexOf(_qs) != -1){
-                                return true;
-                            }else if(r[3].indexOf(_qs) != -1){
-                                return true;
-                            }else{
-                                return false;
-                            }
+                            // console.log('_qs',_qs.charCodeAt(0).toString(16));  // 將中文字轉成 \uxxxx 的格式
+
+                            // 將想要查詢的中文字串轉成 \uxxxx 的格式
+                            let search_pattern_arr_unicide = Array.from(String(_qs.trim().replaceAll(' ', '|')).split('')).map(_spa=>{
+                                if(_spa!='|') {
+                                    return "\\u"+_spa.charCodeAt(0).toString(16);
+                                }else{ return '|'; }
+                            });
+
+                            // 計算關鍵詞的數目
+                            let total_keyword_num = search_pattern_arr_unicide.join('').split('|').length;
+
+                            // 進行比對
+                            let search_result = Array.from(`${r[0]} - ${r[1]} - ${r[2]} - ${r[3]}`.matchAll(new RegExp(search_pattern_arr_unicide.join(''), 'g')));
+
+                            // if(search_result.length >= total_keyword_num) {
+                            //     console.log('search_result', search_result);
+                            // }
+
+                            // 如果比對的結果，大於關鍵詞的數量，則為我們要的項目
+                            return search_result.length >= total_keyword_num;
                         });
+
                         setCandicatorList(filtered_data);
 
                         setShowCandicator(true);
@@ -209,7 +230,7 @@
                                                         <Form.Label>產品名稱</Form.Label>
                                                         <Form.Control type="text" placeholder="產品名稱" onChange={(e)=>{handleQuery(e)}} />
                                                         <Form.Text className="text-muted">
-                                                            請輸入要查詢的產品名稱
+                                                            請輸入要查詢的產品名稱 (可用空白隔開想要查詢的關鍵字)
                                                         </Form.Text>
                                                     </Form.Group>
                                                 </Form>
